@@ -1,0 +1,75 @@
+/// Transmit 
+/*
+---- Transmitter Code ----
+Mert Arduino Tutorial & Projects (YouTube)
+Please Subscribe for Support
+*/
+
+#include <SPI.h>                      //the communication interface with the modem
+#include <RF24.h>                    //the library which helps us to control the radio modem
+
+int msg[1];
+int CE_PIN = 7;
+int CSN_PIN = 8;
+int DataIn = A0;
+
+RF24 radio(CE_PIN, CSN_PIN);          //7 and 8 are a digital pin numbers to which signals CE and CSN are connected.
+                                      
+const uint64_t pipe = 0xE8E8F0F0E1LL; //the address of the modem, that will receive data from Arduino.
+
+
+void setup(void){
+  radio.begin();                      //it activates the modem.
+  radio.openWritingPipe(pipe);        //sets the address of the receiver to which the program will send data.
+}
+
+void loop(void){
+  msg[0] =  map (analogRead(DataIn), 0, 1023, 0, 179); 
+  radio.write(msg, 1);
+}
+
+/*
+*********************************************************************
+*********************************************************************
+*********************************************************************
+*********************************************************************
+*/
+
+///Receive
+/*
+---- Receiver Code ----
+Mert Arduino Tutorial & Projects (YouTube)
+Please Subscribe for Support
+*/
+
+#include <Servo.h>    //the library which helps us to control the servo motor
+#include <SPI.h>      //the communication interface with the modem
+#include "RF24.h"     //the library which helps us to control the radio modem
+
+Servo myServo;        //define the servo name
+
+int msg[1];
+int CE_PIN = 7;
+int CSN_PIN = 8;
+int ServoPin = 3;
+
+RF24 radio(CE_PIN, CSN_PIN);          //7 and 8 are a digital pin numbers to which signals CE and CSN are connected.
+
+const uint64_t pipe = 0xE8E8F0F0E1LL; //the address of the modem,that will receive data from the Arduino.
+
+
+void setup(){
+  myServo.attach(ServoPin);         //a digital pin to which servo signal connected.
+  radio.begin();                    //it activates the modem.
+  radio.openReadingPipe(1, pipe);   //determines the address of our modem which receive data.
+  radio.startListening();           //enable receiving data via modem
+  }
+
+void loop(){
+  if(radio.available()){            //checks whether any data has arrived at the address of the modem
+    while (radio.available()) {
+     radio.read(msg, 1);
+     myServo.write(msg[0]);
+    }
+  }
+}
